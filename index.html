@@ -4,8 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Fetch Users App</title>
+    <link rel="stylesheet" href="./src/styles/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
   </head>
   <body>
+    <div class="app-page">
+      <div class="app-page__fetch fetch-users-app">
+        <div class="fetch-users-app__card user-card">
+          <div class="user-card__header card-header">
+            <h3 class="card-header__title">User Card:</h3>
+            <button class="card-header__close-btn">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <ul class="user-card__user-info user-info">
+            <li class="user-info__elem username"></li>
+            <li class="user-info__elem id"></li>
+            <li class="user-info__elem company"></li>
+            <li class="user-info__elem adress"></li>
+            <li class="user-info__elem phone"></li>
+            <li class="user-info__elem email"></li>
+            <li class="user-info__elem website"></li>
+          </ul>
+        </div>
+
+        <div class="fetch-users-app__action-btns action-btns">
+          <button class="action-btns__get-data-btn">Get Users Data</button>
+
+          <button class="action-btns__select-user-btn" data-prev="prev user">
+            <i class="fa-solid fa-chevron-left"></i> Previous
+          </button>
+
+          <button class="action-btns__select-user-btn" data-next="next user">
+            Next <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
     <script type="module" src="dist/index.js"></script>
   </body>
 </html>
