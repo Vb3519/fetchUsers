@@ -31,8 +31,17 @@ Array.from(selectUserBtns).forEach((btn) => {
 
 // Состояние приложения:
 let usersData: usersData_API_response[] | null = null;
+
 let userDataCounter: number = 0;
+
 let currentUserDetailedCompanyInfo: detailedCompanyData_API_response | null =
+  null;
+
+let currentUserDetailedAdressInfo: detailedAdressData_API_response | null =
+  null;
+
+let currentUserDetailedInfo: // для рендера
+detailedCompanyData_API_response | detailedAdressData_API_response | null =
   null;
 
 const API_URL: string = 'https://jsonplaceholder.typicode.com/users';
@@ -89,7 +98,8 @@ async function handleFetchUsersData(): Promise<void> {
     usersData = await fetchUsersData();
     console.log('usersData:', usersData);
 
-    getCurrentUserDetailedCompanyInfo(userDataCounter);
+    setCurrentUserDetailedCompanyInfo(userDataCounter);
+    setCurrentUserDetailedAdressInfo(userDataCounter);
 
     renderUserInfo(usersData, userDataCounter);
 
@@ -117,7 +127,7 @@ const renderUserInfo = (
       <span class="company__name">Company: ${usersInfo[counter].company.name}</span>
 
       <div class="company__details company-details">
-        <button class="company-details__btn details-btn">More</button>        
+        <button class="company-details__btn details-btn" data-details="company">More</button>        
       </div>
     </li>    
 
@@ -125,7 +135,7 @@ const renderUserInfo = (
     <span class="adress__city">City: ${usersInfo[counter].address.city}</span>
 
       <div class="adress__details adress-details">
-        <button class="adress-details__btn details-btn">More</button>        
+        <button class="adress-details__btn details-btn" data-details="address">More</button>        
       </div>
     </li>   
 
@@ -134,11 +144,11 @@ const renderUserInfo = (
     <li class="user-info__elem website">Website: ${usersInfo[counter].website}</li>
     `;
 
-  const currentUserCompanyDetailsBtn: HTMLButtonElement | null =
-    document.querySelector('.company-details__btn');
+  const currentUserDetailsBtns: NodeListOf<HTMLButtonElement> =
+    selectedUserData.querySelectorAll('.details-btn');
 
-  currentUserCompanyDetailsBtn?.addEventListener('click', () => {
-    renderDetailedCompanyInfo(appPageWrapper, currentUserDetailedCompanyInfo);
+  Array.from(currentUserDetailsBtns).forEach((button) => {
+    button.addEventListener('click', handleRenderCurrentUserDetailedInfo);
   });
 };
 
@@ -156,7 +166,8 @@ function selectAnotherUser(e: Event) {
       ? (userDataCounter = usersData.length - 1)
       : --userDataCounter;
 
-    getCurrentUserDetailedCompanyInfo(userDataCounter);
+    setCurrentUserDetailedCompanyInfo(userDataCounter);
+    setCurrentUserDetailedAdressInfo(userDataCounter);
     renderUserInfo(usersData, userDataCounter);
   }
 
@@ -165,11 +176,13 @@ function selectAnotherUser(e: Event) {
       ? (userDataCounter = 0)
       : ++userDataCounter;
 
-    getCurrentUserDetailedCompanyInfo(userDataCounter);
+    setCurrentUserDetailedCompanyInfo(userDataCounter);
+    setCurrentUserDetailedAdressInfo(userDataCounter);
     renderUserInfo(usersData, userDataCounter);
   }
 }
 
+// ----------------------------------------------------------------------------------------------------
 // Получение детальной информации о компании текущего пользователя:
 interface detailedCompanyData_API_response {
   bs: string;
@@ -177,7 +190,7 @@ interface detailedCompanyData_API_response {
   name: string;
 }
 
-function getCurrentUserDetailedCompanyInfo(counter: number) {
+function setCurrentUserDetailedCompanyInfo(counter: number) {
   if (!usersData) {
     console.log('usersData:', usersData);
     return;
@@ -190,27 +203,84 @@ function getCurrentUserDetailedCompanyInfo(counter: number) {
   );
 }
 
-// Рендер детальной информации о компании:
-function renderDetailedCompanyInfo(
-  wrapperElem: HTMLDivElement | null,
-  detailedCompanyData: detailedCompanyData_API_response | null
-): void {
-  if (!wrapperElem || !detailedCompanyData) {
-    console.log('wrapperElem:', wrapperElem);
-    console.log('detailedCompanyData:', detailedCompanyData);
+// ----------------------------------------------------------------------------------------------------
+// Получение детальной информации об адресе текущего пользователя:
+interface detailedAdressData_API_response {
+  city: string;
+  geo: { lat: string; lng: string };
+  street: string;
+  suite: string;
+  zipcode: string;
+}
+
+function setCurrentUserDetailedAdressInfo(counter: number) {
+  if (!usersData) {
+    console.log('usersData:', usersData);
     return;
   }
 
-  wrapperElem.classList.add('active-elem');
+  currentUserDetailedAdressInfo = usersData[counter].address;
 
-  wrapperElem.innerHTML = `
-    <ul class="company-details__list">
-      <li class="company-details__list__elem">bs: ${detailedCompanyData.bs}</li>
-      <li class="company-details__list__elem">
-        Catch Phrase: ${detailedCompanyData.catchPhrase}
-      </li>
-    </ul>
-  `;
+  console.log('currentUserDetailedAdressInfo:', currentUserDetailedAdressInfo);
+}
+
+// ----------------------------------------------------------------------------------------------------
+// Рендер детальной информации о пользователе (адрес, компания):
+
+// Выбор опции (адрес или компания) для рендера:
+function setCurrentUserDetailedDataOption(optionData: string) {
+  if (!usersData) {
+    console.log('usersData:', usersData);
+    return;
+  }
+
+  if (optionData === 'address') {
+    currentUserDetailedInfo = currentUserDetailedAdressInfo; // объект с данными для рендера
+  }
+
+  if (optionData === 'company') {
+    currentUserDetailedInfo = currentUserDetailedCompanyInfo;
+  }
+}
+
+// Рендер детальной информации о пользователе:
+function renderCurrentUserDetailedInfo(
+  wrapperElem: HTMLDivElement | null,
+  currentUserDetailedData:
+    | detailedCompanyData_API_response
+    | detailedAdressData_API_response
+    | null
+) {
+  if (!wrapperElem || !currentUserDetailedData) {
+    console.log('wrapperElem:', wrapperElem);
+    console.log('currentUserDetailedData:', currentUserDetailedData);
+    return;
+  }
+
+  let optionalInnerHTML: string = '';
+
+  if ('bs' in currentUserDetailedData) {
+    optionalInnerHTML = `
+      <ul class="company-details__list">
+        <li class="company-details__list__elem">bs: ${currentUserDetailedData.bs}</li>
+        <li class="company-details__list__elem">
+          Catch Phrase: ${currentUserDetailedData.catchPhrase}
+        </li>
+      </ul>
+    `;
+  }
+
+  if ('street' in currentUserDetailedData) {
+    optionalInnerHTML = `<ul class="adress-details__list">
+      <li class="adress-details__list__elem">Street: ${currentUserDetailedData.street}</li>
+      <li class="adress-details__list__elem">Suite: ${currentUserDetailedData.suite}</li>
+      <li class="adress-details__list__elem">Zipcode: ${currentUserDetailedData.zipcode}</li>
+    </ul>`;
+  }
+
+  wrapperElem.innerHTML = optionalInnerHTML;
+
+  wrapperElem.classList.add('active-elem');
 
   const handleClick = (): void => {
     if (wrapperElem.classList.contains('active-elem')) {
@@ -222,4 +292,20 @@ function renderDetailedCompanyInfo(
   wrapperElem.addEventListener('click', handleClick);
 }
 
-function renderDetailedAdressInfo(data: any): void {}
+// Функция-хэндлер рендера детальной информации о пользователе:
+function handleRenderCurrentUserDetailedInfo(e: Event) {
+  const currentTarget = e.currentTarget as HTMLButtonElement;
+
+  const currentUserOptionData: string | undefined =
+    currentTarget.dataset.details; // компания или адрес
+  console.log('currentUserOptionData:', currentUserOptionData);
+
+  if (!currentUserOptionData) {
+    console.log('currentUserOptionData:', currentUserOptionData);
+    return;
+  }
+
+  setCurrentUserDetailedDataOption(currentUserOptionData);
+
+  renderCurrentUserDetailedInfo(appPageWrapper, currentUserDetailedInfo);
+}
