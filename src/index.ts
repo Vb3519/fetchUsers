@@ -3,34 +3,24 @@
 const greeting: string = 'Hello from TypeScript ^_^';
 console.log('My greeting:', greeting);
 
-const getUsersDataBtn: HTMLButtonElement | null = document.querySelector(
-  '.action-btns__get-data-btn'
-);
-
-const fetchUsersDataContainer: HTMLDivElement | null =
-  document.querySelector('.fetch-users-app');
-
-const selectedUserData: HTMLUListElement | null = document.querySelector(
-  '.user-card__user-info'
-);
-
-const selectUserBtns: NodeListOf<HTMLButtonElement> = document.querySelectorAll(
-  '.action-btns__select-user-btn'
-);
+const appContainer: HTMLDivElement | null =
+  document.querySelector('.app-page__fetch');
 
 const appPageWrapper: HTMLDivElement | null = document.querySelector(
   '.fetch-users-app__wrapper'
 );
 
-// Обработчики:
-getUsersDataBtn?.addEventListener('click', handleFetchUsersData);
+const fetchUsersCard: HTMLDivElement | null = document.querySelector(
+  '.fetch-users-app__card'
+);
 
-Array.from(selectUserBtns).forEach((btn) => {
-  btn.addEventListener('click', selectAnotherUser);
-});
+const actionBtnsContainer: HTMLDivElement | null = document.querySelector(
+  '.fetch-users-app__action-btns'
+);
 
 // Состояние приложения:
 let usersData: usersData_API_response[] | null = null;
+let isDataLoaded: boolean = false;
 
 let userDataCounter: number = 0;
 
@@ -83,43 +73,72 @@ const fetchUsersData = async (): Promise<usersData_API_response[]> => {
 };
 
 // Функция хэндлер-обработчик (получения данных о пользователях):
-async function handleFetchUsersData(): Promise<void> {
+async function handleFetchUsersData(
+  btnElem: HTMLButtonElement | null
+): Promise<void> {
   try {
-    if (!getUsersDataBtn) return;
+    if (!btnElem) return;
 
-    getUsersDataBtn.disabled = true;
+    btnElem.disabled = true;
 
     if (usersData) {
       console.log('Users data already fetched!');
-      getUsersDataBtn.disabled = false;
+      btnElem.disabled = false;
       return;
     }
+
+    await myFetchTimer(); // Таймер для отображения анимации загрузки даты пользователей
 
     usersData = await fetchUsersData();
     console.log('usersData:', usersData);
 
+    isDataLoaded = true;
+    console.log('users data loaded:', isDataLoaded);
+
     setCurrentUserDetailedCompanyInfo(userDataCounter);
     setCurrentUserDetailedAdressInfo(userDataCounter);
 
-    renderUserInfo(usersData, userDataCounter);
-
-    getUsersDataBtn.disabled = false;
+    renderUserCardBody(fetchUsersCard);
   } catch (error: unknown) {
-    if (!getUsersDataBtn) return;
-
-    getUsersDataBtn.disabled = false;
+    if (!btnElem) return;
+    btnElem.disabled = false;
     console.log('error:', error);
+  }
+}
+
+// Рендер тела карточки пользователя: fetchUsersCard
+function renderUserCardBody(cardContainer: HTMLDivElement | null) {
+  if (cardContainer) {
+    cardContainer.innerHTML = `      
+      <div class="user-card__header card-header">
+        <h3 class="card-header__title">User Card:</h3>
+        <button class="card-header__close-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <ul class="user-card__user-info user-info">
+      </ul>      
+    `;
+
+    const selectedUserData: HTMLUListElement | null = document.querySelector(
+      '.user-card__user-info'
+    );
+    renderUserInfo(selectedUserData, usersData, userDataCounter);
+
+    renderActionBtns(actionBtnsContainer, isDataLoaded);
   }
 }
 
 // Рендер информации о пользователе:
 const renderUserInfo = (
+  userDataListElem: HTMLUListElement | null,
   usersInfo: usersData_API_response[] | null,
   counter: number
 ): void => {
-  if (!selectedUserData || !usersInfo) return;
+  if (!userDataListElem || !usersInfo) return;
 
-  selectedUserData.innerHTML = `
+  userDataListElem.innerHTML = `
     <li class="user-info__elem username">Username: ${usersInfo[counter].name}</li>
     <li class="user-info__elem id">Id: ${usersInfo[counter].id}</li>
 
@@ -145,7 +164,7 @@ const renderUserInfo = (
     `;
 
   const currentUserDetailsBtns: NodeListOf<HTMLButtonElement> =
-    selectedUserData.querySelectorAll('.details-btn');
+    userDataListElem.querySelectorAll('.details-btn');
 
   Array.from(currentUserDetailsBtns).forEach((button) => {
     button.addEventListener('click', handleRenderCurrentUserDetailedInfo);
@@ -166,9 +185,12 @@ function selectAnotherUser(e: Event) {
       ? (userDataCounter = usersData.length - 1)
       : --userDataCounter;
 
+    // Данные:
     setCurrentUserDetailedCompanyInfo(userDataCounter);
     setCurrentUserDetailedAdressInfo(userDataCounter);
-    renderUserInfo(usersData, userDataCounter);
+
+    // Рендер:
+    renderUserCardBody(fetchUsersCard);
   }
 
   if (currentTargetElement.dataset.next) {
@@ -176,9 +198,10 @@ function selectAnotherUser(e: Event) {
       ? (userDataCounter = 0)
       : ++userDataCounter;
 
-    setCurrentUserDetailedCompanyInfo(userDataCounter);
+    setCurrentUserDetailedCompanyInfo(userDataCounter); // ------------------------------------- создай общую функцию под эти три
     setCurrentUserDetailedAdressInfo(userDataCounter);
-    renderUserInfo(usersData, userDataCounter);
+
+    renderUserCardBody(fetchUsersCard);
   }
 }
 
@@ -309,3 +332,94 @@ function handleRenderCurrentUserDetailedInfo(e: Event) {
 
   renderCurrentUserDetailedInfo(appPageWrapper, currentUserDetailedInfo);
 }
+
+// Таймер для задержки загрузки и отображения анимации:
+function myFetchTimer(): Promise<unknown> {
+  console.log('Waiting ^_^');
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve('');
+    }, 1000);
+  });
+}
+
+function renderLoader(userCardContainer: HTMLDivElement | null) {
+  if (!userCardContainer) {
+    return;
+  }
+
+  userCardContainer.innerHTML = `    
+      <div class="loading-container">
+        <span class="loading-container__title">Loading...</span>
+        <div class="loading-container__label"></div>
+      </div>
+  `;
+}
+
+// renderLoader(fetchUsersCard);
+
+// const myLoader = document.getElementById('loader');
+// console.log(myLoader);
+
+// async function loader() {
+//     const dots = '...';
+
+//     for (let i = 0; i < dots.length; i++) {
+//         await new Promise((resolve, reject) => {
+//             setTimeout(() => {
+//                 myLoader.innerText = myLoader.innerText + dots[i];
+//                 resolve();
+//             }, 1000);
+//         })
+//     };
+
+//     setTimeout(() => {
+//             myLoader.innerText = myLoader.innerText.slice(0, -3);
+//             loader();
+//         }, 1000);
+// };
+
+function renderActionBtns(
+  containerElem: HTMLDivElement | null,
+  dataLoaded: boolean
+) {
+  if (containerElem) {
+    const emptyDataInnerHTML: string = `
+      <button class="action-btns__get-data-btn">Get Users Data</button>
+    `;
+
+    const dataLoadedInnerHTML: string = `
+      <button class="action-btns__select-user-btn" data-prev="prev user">
+        <i class="fa-solid fa-chevron-left"></i> Previous
+      </button>
+
+      <button class="action-btns__select-user-btn" data-next="next user">
+        Next <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    `;
+
+    containerElem.innerHTML = dataLoaded
+      ? dataLoadedInnerHTML
+      : emptyDataInnerHTML;
+
+    // Навешивание обработчиков на кнопки после отрисовки структуры контейнера:
+    const selectUserBtns: NodeListOf<HTMLButtonElement> =
+      document.querySelectorAll('.action-btns__select-user-btn');
+
+    Array.from(selectUserBtns).forEach((btn) => {
+      btn.addEventListener('click', selectAnotherUser);
+    });
+
+    const getUsersDataBtn: HTMLButtonElement | null =
+      containerElem.querySelector('.action-btns__get-data-btn');
+
+    getUsersDataBtn?.addEventListener('click', () => {
+      handleFetchUsersData(getUsersDataBtn);
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderActionBtns(actionBtnsContainer, isDataLoaded);
+});
