@@ -1,8 +1,9 @@
-// await на верхних уровнях НЕ работает при настройке "module": "ES2020"
-
 const greeting: string = 'Hello from TypeScript ^_^';
 console.log('My greeting:', greeting);
 
+// -----------------------------------------------------------------------------
+// ВИД:
+// -----------------------------------------------------------------------------
 const appContainer: HTMLDivElement | null =
   document.querySelector('.app-page__fetch');
 
@@ -18,7 +19,9 @@ const actionBtnsContainer: HTMLDivElement | null = document.querySelector(
   '.fetch-users-app__action-btns'
 );
 
-// Состояние приложения:
+// -----------------------------------------------------------------------------
+// СОСТОЯНИЕ ПРИЛОЖЕНИЯ:
+// -----------------------------------------------------------------------------
 let usersData: usersData_API_response[] | null = null;
 let isDataLoaded: boolean = false;
 
@@ -35,6 +38,10 @@ detailedCompanyData_API_response | detailedAdressData_API_response | null =
   null;
 
 const API_URL: string = 'https://jsonplaceholder.typicode.com/users';
+
+// -----------------------------------------------------------------------------
+// ИНТЕРФЕЙСЫ (ТИПЫ):
+// -----------------------------------------------------------------------------
 
 interface userData_adress {
   city: string;
@@ -59,6 +66,20 @@ interface usersData_API_response {
   phone: string;
   username: string;
   website: string;
+}
+
+interface detailedCompanyData_API_response {
+  bs: string;
+  catchPhrase: string;
+  name: string;
+}
+
+interface detailedAdressData_API_response {
+  city: string;
+  geo: { lat: string; lng: string };
+  street: string;
+  suite: string;
+  zipcode: string;
 }
 
 // Получение данных о пользователях:
@@ -87,6 +108,8 @@ async function handleFetchUsersData(
       return;
     }
 
+    renderLoader(fetchUsersCard);
+
     await myFetchTimer(); // Таймер для отображения анимации загрузки даты пользователей
 
     usersData = await fetchUsersData();
@@ -95,10 +118,8 @@ async function handleFetchUsersData(
     isDataLoaded = true;
     console.log('users data loaded:', isDataLoaded);
 
-    setCurrentUserDetailedCompanyInfo(userDataCounter);
-    setCurrentUserDetailedAdressInfo(userDataCounter);
-
-    renderUserCardBody(fetchUsersCard);
+    // Общая функция по детальным данным пользователя и рендеру карточки:
+    handleSetUserDetailedInfoAndCardRender(userDataCounter, fetchUsersCard);
   } catch (error: unknown) {
     if (!btnElem) return;
     btnElem.disabled = false;
@@ -112,7 +133,7 @@ function renderUserCardBody(cardContainer: HTMLDivElement | null) {
     cardContainer.innerHTML = `      
       <div class="user-card__header card-header">
         <h3 class="card-header__title">User Card:</h3>
-        <button class="card-header__close-btn">
+        <button class="card-header__close-btn" title="Reset users data">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -127,6 +148,9 @@ function renderUserCardBody(cardContainer: HTMLDivElement | null) {
     renderUserInfo(selectedUserData, usersData, userDataCounter);
 
     renderActionBtns(actionBtnsContainer, isDataLoaded);
+
+    const resetAppBtn = cardContainer.querySelector('.card-header__close-btn');
+    resetAppBtn?.addEventListener('click', resetUsersCardApp);
   }
 }
 
@@ -185,12 +209,8 @@ function selectAnotherUser(e: Event) {
       ? (userDataCounter = usersData.length - 1)
       : --userDataCounter;
 
-    // Данные:
-    setCurrentUserDetailedCompanyInfo(userDataCounter);
-    setCurrentUserDetailedAdressInfo(userDataCounter);
-
-    // Рендер:
-    renderUserCardBody(fetchUsersCard);
+    // Общая функция по детальным данным пользователя и рендеру карточки:
+    handleSetUserDetailedInfoAndCardRender(userDataCounter, fetchUsersCard);
   }
 
   if (currentTargetElement.dataset.next) {
@@ -198,21 +218,22 @@ function selectAnotherUser(e: Event) {
       ? (userDataCounter = 0)
       : ++userDataCounter;
 
-    setCurrentUserDetailedCompanyInfo(userDataCounter); // ------------------------------------- создай общую функцию под эти три
-    setCurrentUserDetailedAdressInfo(userDataCounter);
-
-    renderUserCardBody(fetchUsersCard);
+    handleSetUserDetailedInfoAndCardRender(userDataCounter, fetchUsersCard);
   }
+}
+
+// Детальная информация об адресе и компании пользователя и рендер карточки:
+function handleSetUserDetailedInfoAndCardRender(
+  counter: number,
+  userCard: HTMLDivElement | null
+): void {
+  setCurrentUserDetailedCompanyInfo(counter);
+  setCurrentUserDetailedAdressInfo(counter);
+  renderUserCardBody(userCard);
 }
 
 // ----------------------------------------------------------------------------------------------------
 // Получение детальной информации о компании текущего пользователя:
-interface detailedCompanyData_API_response {
-  bs: string;
-  catchPhrase: string;
-  name: string;
-}
-
 function setCurrentUserDetailedCompanyInfo(counter: number) {
   if (!usersData) {
     console.log('usersData:', usersData);
@@ -228,14 +249,6 @@ function setCurrentUserDetailedCompanyInfo(counter: number) {
 
 // ----------------------------------------------------------------------------------------------------
 // Получение детальной информации об адресе текущего пользователя:
-interface detailedAdressData_API_response {
-  city: string;
-  geo: { lat: string; lng: string };
-  street: string;
-  suite: string;
-  zipcode: string;
-}
-
 function setCurrentUserDetailedAdressInfo(counter: number) {
   if (!usersData) {
     console.log('usersData:', usersData);
@@ -340,10 +353,11 @@ function myFetchTimer(): Promise<unknown> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve('');
-    }, 1000);
+    }, 2000);
   });
 }
 
+// Анимация и лоадер загрузки:
 function renderLoader(userCardContainer: HTMLDivElement | null) {
   if (!userCardContainer) {
     return;
@@ -351,35 +365,43 @@ function renderLoader(userCardContainer: HTMLDivElement | null) {
 
   userCardContainer.innerHTML = `    
       <div class="loading-container">
-        <span class="loading-container__title">Loading...</span>
+        <span class="loading-container__title">Loading</span>
         <div class="loading-container__label"></div>
       </div>
   `;
+
+  const loaderTitle: HTMLSpanElement | null = userCardContainer.querySelector(
+    '.loading-container__title'
+  );
+
+  loaderTitleAnimation(loaderTitle);
 }
 
-// renderLoader(fetchUsersCard);
+// Анимация загрузки (отображение точек):
+async function loaderTitleAnimation(titleElem: HTMLSpanElement | null) {
+  if (!titleElem) {
+    console.log('titleElem:', titleElem);
+    return;
+  }
 
-// const myLoader = document.getElementById('loader');
-// console.log(myLoader);
+  const dots = '...';
 
-// async function loader() {
-//     const dots = '...';
+  for (let i = 0; i < dots.length; i++) {
+    await new Promise((resolve, reject) => {
+      setTimeout(() => {
+        titleElem.innerText = titleElem.innerText + dots[i];
+        resolve('');
+      }, 500);
+    });
+  }
 
-//     for (let i = 0; i < dots.length; i++) {
-//         await new Promise((resolve, reject) => {
-//             setTimeout(() => {
-//                 myLoader.innerText = myLoader.innerText + dots[i];
-//                 resolve();
-//             }, 1000);
-//         })
-//     };
+  setTimeout(() => {
+    titleElem.innerText = titleElem.innerText.slice(0, -3);
+    loaderTitleAnimation(titleElem);
+  }, 1000);
+}
 
-//     setTimeout(() => {
-//             myLoader.innerText = myLoader.innerText.slice(0, -3);
-//             loader();
-//         }, 1000);
-// };
-
+// Рендер кнопок действий:
 function renderActionBtns(
   containerElem: HTMLDivElement | null,
   dataLoaded: boolean
@@ -423,3 +445,23 @@ function renderActionBtns(
 document.addEventListener('DOMContentLoaded', () => {
   renderActionBtns(actionBtnsContainer, isDataLoaded);
 });
+
+// Ресет всего приложения:
+function resetUsersCardApp(): void {
+  if (appPageWrapper && fetchUsersCard) {
+    appPageWrapper.innerHTML = ``;
+    fetchUsersCard.innerHTML = ``;
+  }
+
+  usersData = null;
+  isDataLoaded = false;
+
+  userDataCounter = 0;
+
+  currentUserDetailedCompanyInfo = null;
+  currentUserDetailedAdressInfo = null;
+
+  currentUserDetailedInfo = null;
+
+  renderActionBtns(actionBtnsContainer, isDataLoaded);
+}
