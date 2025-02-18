@@ -163,11 +163,11 @@ const renderUserInfo = (
   if (!userDataListElem || !usersInfo) return;
 
   userDataListElem.innerHTML = `
-    <li class="user-info__elem username">Username: ${usersInfo[counter].name}</li>
-    <li class="user-info__elem id">Id: ${usersInfo[counter].id}</li>
+    <li class="user-info__elem username"><span>Username:</span> ${usersInfo[counter].name}</li>
+    <li class="user-info__elem id"><span>Id:</span> ${usersInfo[counter].id}</li>
 
     <li class="user-info__elem company">      
-      <span class="company__name">Company: ${usersInfo[counter].company.name}</span>
+      <p class="company__name"><span>Company:</span> ${usersInfo[counter].company.name}</p>
 
       <div class="company__details company-details">
         <button class="company-details__btn details-btn" data-details="company">More</button>        
@@ -175,16 +175,16 @@ const renderUserInfo = (
     </li>    
 
     <li class="user-info__elem adress">
-    <span class="adress__city">City: ${usersInfo[counter].address.city}</span>
+    <p class="adress__city"><span>City:</span> ${usersInfo[counter].address.city}</p>
 
       <div class="adress__details adress-details">
         <button class="adress-details__btn details-btn" data-details="address">More</button>        
       </div>
     </li>   
 
-    <li class="user-info__elem phone">Phone: ${usersInfo[counter].phone}</li>
-    <li class="user-info__elem email">E-mail: ${usersInfo[counter].email}</li>
-    <li class="user-info__elem website">Website: ${usersInfo[counter].website}</li>
+    <li class="user-info__elem phone"><span>Phone:</span> ${usersInfo[counter].phone}</li>
+    <li class="user-info__elem email"><span>E-mail:</span> ${usersInfo[counter].email}</li>
+    <li class="user-info__elem website"><span>Website:</span> ${usersInfo[counter].website}</li>
     `;
 
   const currentUserDetailsBtns: NodeListOf<HTMLButtonElement> =
