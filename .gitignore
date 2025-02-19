@@ -1,9 +1,6 @@
 # Node.js
 node_modules/
 
-# Папка для сборки
-dist/
-
 # Логи
 npm-debug.log
 yarn-debug.log
