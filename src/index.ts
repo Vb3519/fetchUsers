@@ -1,6 +1,3 @@
-const greeting: string = 'Hello from TypeScript ^_^';
-console.log('My greeting:', greeting);
-
 // -----------------------------------------------------------------------------
 // ВИД:
 // -----------------------------------------------------------------------------
@@ -122,6 +119,8 @@ async function handleFetchUsersData(
     handleSetUserDetailedInfoAndCardRender(userDataCounter, fetchUsersCard);
   } catch (error: unknown) {
     if (!btnElem) return;
+
+    renderFetchError(fetchUsersCard);
     btnElem.disabled = false;
     console.log('error:', error);
   }
@@ -139,7 +138,7 @@ function renderUserCardBody(cardContainer: HTMLDivElement | null) {
       </div>
 
       <ul class="user-card__user-info user-info">
-      </ul>      
+      </ul>
     `;
 
     const selectedUserData: HTMLUListElement | null = document.querySelector(
@@ -241,10 +240,6 @@ function setCurrentUserDetailedCompanyInfo(counter: number) {
   }
 
   currentUserDetailedCompanyInfo = usersData[counter].company;
-  console.log(
-    'currentUserDetailedCompanyInfo:',
-    currentUserDetailedCompanyInfo
-  );
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -256,8 +251,6 @@ function setCurrentUserDetailedAdressInfo(counter: number) {
   }
 
   currentUserDetailedAdressInfo = usersData[counter].address;
-
-  console.log('currentUserDetailedAdressInfo:', currentUserDetailedAdressInfo);
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -298,9 +291,9 @@ function renderCurrentUserDetailedInfo(
   if ('bs' in currentUserDetailedData) {
     optionalInnerHTML = `
       <ul class="company-details__list">
-        <li class="company-details__list__elem">bs: ${currentUserDetailedData.bs}</li>
+        <li class="company-details__list__elem"><span>bs:</span> ${currentUserDetailedData.bs}</li>
         <li class="company-details__list__elem">
-          Catch Phrase: ${currentUserDetailedData.catchPhrase}
+          <span>Catch Phrase:</span> ${currentUserDetailedData.catchPhrase}
         </li>
       </ul>
     `;
@@ -308,9 +301,9 @@ function renderCurrentUserDetailedInfo(
 
   if ('street' in currentUserDetailedData) {
     optionalInnerHTML = `<ul class="adress-details__list">
-      <li class="adress-details__list__elem">Street: ${currentUserDetailedData.street}</li>
-      <li class="adress-details__list__elem">Suite: ${currentUserDetailedData.suite}</li>
-      <li class="adress-details__list__elem">Zipcode: ${currentUserDetailedData.zipcode}</li>
+      <li class="adress-details__list__elem"><span>Street:</span> ${currentUserDetailedData.street}</li>
+      <li class="adress-details__list__elem"><span>Suite:</span> ${currentUserDetailedData.suite}</li>
+      <li class="adress-details__list__elem"><span>Zipcode:</span> ${currentUserDetailedData.zipcode}</li>
     </ul>`;
   }
 
@@ -334,7 +327,6 @@ function handleRenderCurrentUserDetailedInfo(e: Event) {
 
   const currentUserOptionData: string | undefined =
     currentTarget.dataset.details; // компания или адрес
-  console.log('currentUserOptionData:', currentUserOptionData);
 
   if (!currentUserOptionData) {
     console.log('currentUserOptionData:', currentUserOptionData);
@@ -363,7 +355,7 @@ function renderLoader(userCardContainer: HTMLDivElement | null) {
     return;
   }
 
-  userCardContainer.innerHTML = `    
+  userCardContainer.innerHTML = `
       <div class="loading-container">
         <span class="loading-container__title">Loading</span>
         <div class="loading-container__label"></div>
@@ -413,7 +405,7 @@ function renderActionBtns(
 
     const dataLoadedInnerHTML: string = `
       <button class="action-btns__select-user-btn" data-prev="prev user">
-        <i class="fa-solid fa-chevron-left"></i> Previous
+        <i class="fa-solid fa-chevron-left"></i> Prev
       </button>
 
       <button class="action-btns__select-user-btn" data-next="next user">
@@ -464,4 +456,17 @@ function resetUsersCardApp(): void {
   currentUserDetailedInfo = null;
 
   renderActionBtns(actionBtnsContainer, isDataLoaded);
+}
+
+// Рендер ошибки, при неправильной ссылке для скачивания информации о пользователях:
+function renderFetchError(userCardContainer: HTMLDivElement | null) {
+  if (!userCardContainer) {
+    return;
+  }
+
+  userCardContainer.innerHTML = `
+      <div class="error-container">
+        <span class="error-container__title">Ничего не нашлось...</span>        
+      </div>
+  `;
 }
